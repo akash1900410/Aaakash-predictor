@@ -12,9 +12,10 @@
   <script>
     function fetchWinGoData() {
       const timestamp = Date.now();
-      const url = "https://akashproxy.fly.dev/api?ts=" + timestamp;
+      const apiURL = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?ts=" + timestamp;
+      const proxyURL = "https://corsproxy.io/?" + encodeURIComponent(apiURL);
 
-      fetch(url)
+      fetch(proxyURL)
         .then(response => {
           if (!response.ok) {
             throw new Error("HTTP status " + response.status);
