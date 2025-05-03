@@ -3,28 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WinGo 30S Fetch Test</title>
+  <title>Akash Predictor</title>
 </head>
 <body>
-  <h1>WinGo 30S Data Fetcher</h1>
+  <h1>Akash Predictor</h1>
+  <h3>Prediction (Next Number & Color):</h3>
+  <div id="prediction" style="font-size: 20px; font-weight: bold; color: green;"></div>
+  <h3>Recent Data:</h3>
   <pre id="output">Loading...</pre>
 
   <script>
+    function predictNextNumber(numbers) {
+      // Example logic: use most frequent number in last 5 as base
+      const freq = {};
+      numbers.slice(0, 5).forEach(n => {
+        freq[n] = (freq[n] || 0) + 1;
+      });
+      const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+      return sorted[0] ? sorted[0][0] : "0";
+    }
+
+    function predictColor(number) {
+      number = parseInt(number);
+      if ([0, 5, 10, 15, 20, 25].includes(number)) return "violet";
+      if (number % 2 === 0) return "red";
+      return "green";
+    }
+
     function fetchWinGoData() {
       const timestamp = Date.now();
-      const apiURL = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?ts=" + timestamp;
-      const proxyURL = "https://corsproxy.io/?" + encodeURIComponent(apiURL);
+      const url = "https://corsproxy.io/?" + encodeURIComponent("https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?ts=" + timestamp);
 
-      fetch(proxyURL)
+      fetch(url)
         .then(response => {
-          if (!response.ok) {
-            throw new Error("HTTP status " + response.status);
-          }
+          if (!response.ok) throw new Error("HTTP status " + response.status);
           return response.json();
         })
         .then(data => {
-          console.log("Data:", data);
-          document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+          const list = data?.data?.list || [];
+          document.getElementById("output").textContent = JSON.stringify(list.slice(0, 5), null, 2);
+
+          const recentNumbers = list.map(item => item.number);
+          const nextNumber = predictNextNumber(recentNumbers);
+          const nextColor = predictColor(nextNumber);
+
+          document.getElementById("prediction").textContent = `Next Number: ${nextNumber}, Color: ${nextColor}`;
         })
         .catch(error => {
           console.error("Error:", error);
@@ -33,9 +56,7 @@
     }
 
     fetchWinGoData(); // First load
-
-    // Optional: Auto-refresh every 30 seconds
-    setInterval(fetchWinGoData, 30000);
+    setInterval(fetchWinGoData, 30000); // Auto-refresh
   </script>
 </body>
 </html>
