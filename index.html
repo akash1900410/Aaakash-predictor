@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WinGo 30S Fetch Test</title>
+</head>
+<body>
+  <h1>WinGo 30S Data Fetcher</h1>
+  <pre id="output">Loading...</pre>
+
+  <script>
+    function fetchWinGoData() {
+      const timestamp = Date.now();
+      const url = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?ts=" + timestamp;
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("HTTP status " + response.status);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Data:", data);
+          document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          document.getElementById("output").textContent = "Error fetching data: " + error.message;
+        });
+    }
+
+    fetchWinGoData(); // First load
+
+    // Optional: Auto-refresh every 30 seconds
+    setInterval(fetchWinGoData, 30000);
+  </script>
+</body>
+</html>
