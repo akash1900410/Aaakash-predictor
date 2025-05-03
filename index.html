@@ -7,13 +7,15 @@
   <style>
     body {
       font-family: sans-serif;
-      background-color: #f3f4f6;
+      background-color: #f9fafb;
       padding: 20px;
       text-align: center;
     }
+    h1 { font-size: 32px; margin-bottom: 10px; }
     #prediction {
       font-size: 24px;
       margin-top: 20px;
+      font-weight: bold;
     }
     #history {
       font-size: 14px;
@@ -28,7 +30,7 @@
   <div id="history">Fetching game data...</div>
 
   <script>
-    const apiUrl = 'https://proxy-akash.onrender.com/api';
+    const apiUrl = 'https://akashproxy.fly.dev/api';
 
     function fetchDataAndPredict() {
       fetch(apiUrl)
@@ -36,18 +38,17 @@
         .then(data => {
           const results = data.data.list;
 
-          // Show last 5 results in history
           const lastResults = results.slice(0, 5);
           document.getElementById("history").innerHTML = "<b>Last Results:</b><br>" + lastResults.map(r => {
             return `#${r.issueNumber} - ${r.number} (${r.color})`;
           }).join("<br>");
 
-          // Prediction logic: just a simple average + 1 example (you can improve it)
           const numbers = lastResults.map(r => parseInt(r.number));
-          const nextNumber = (Math.round(numbers.reduce((a, b) => a + b) / numbers.length) + 1) % 10;
+          const average = Math.round(numbers.reduce((a, b) => a + b) / numbers.length);
+          const nextNumber = (average + 3) % 10; // simple logic
           const color = nextNumber % 2 === 0 ? 'red' : (nextNumber % 3 === 0 ? 'violet' : 'green');
 
-          document.getElementById("prediction").innerHTML = `Next Prediction: <b>${nextNumber}</b> (${color})`;
+          document.getElementById("prediction").innerHTML = `Next Prediction: <span style="color:${color};">${nextNumber}</span> (${color})`;
         })
         .catch(error => {
           document.getElementById("prediction").textContent = "Error fetching data!";
@@ -56,7 +57,7 @@
     }
 
     fetchDataAndPredict();
-    setInterval(fetchDataAndPredict, 30000); // refresh every 30 seconds
+    setInterval(fetchDataAndPredict, 30000); // 30s refresh
   </script>
 </body>
 </html>
