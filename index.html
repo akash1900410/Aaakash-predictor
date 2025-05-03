@@ -52,9 +52,10 @@
   <script>
     function fetchWinGoData() {
       const timestamp = Date.now();
-      const url = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?ts=" + timestamp;
+      const originalURL = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?ts=" + timestamp;
+      const proxyURL = "https://corsproxy.io/?" + encodeURIComponent(originalURL);
 
-      fetch(url)
+      fetch(proxyURL)
         .then(response => response.json())
         .then(data => {
           const tableBody = document.getElementById("table-body");
@@ -89,7 +90,7 @@
     }
 
     fetchWinGoData();
-    setInterval(fetchWinGoData, 30000); // auto-refresh
+    setInterval(fetchWinGoData, 30000); // auto-refresh every 30 sec
   </script>
 </body>
 </html>
