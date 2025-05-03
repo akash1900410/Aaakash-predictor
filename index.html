@@ -6,58 +6,64 @@
   <title>Akash Predictor</title>
   <style>
     body {
-      font-family: sans-serif;
-      background-color: #f9fafb;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f6fcfb;
       text-align: center;
+      padding: 50px;
     }
-    h1 { font-size: 32px; margin-bottom: 10px; }
-    #prediction {
-      font-size: 24px;
-      margin-top: 20px;
-      font-weight: bold;
+    h1 {
+      font-size: 36px;
+      color: #111;
     }
-    #history {
-      font-size: 14px;
-      color: #555;
+    #result {
       margin-top: 30px;
+      font-size: 24px;
+      color: #333;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <h1>Akash Predictor</h1>
-  <div id="prediction">Loading prediction...</div>
-  <div id="history">Fetching game data...</div>
+  <div id="result">Fetching game data...</div>
 
   <script>
-    const apiUrl = 'https://akashproxy.fly.dev/api';
+    const apiURL = 'https://akashproxy.fly.dev/api';
 
-    function fetchDataAndPredict() {
-      fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-          const results = data.data.list;
+    async function fetchGameData() {
+      try {
+        const ts = Date.now();
+        const response = await fetch(`${apiURL}?ts=${ts}`);
+        const data = await response.json();
 
-          const lastResults = results.slice(0, 5);
-          document.getElementById("history").innerHTML = "<b>Last Results:</b><br>" + lastResults.map(r => {
-            return `#${r.issueNumber} - ${r.number} (${r.color})`;
-          }).join("<br>");
-
-          const numbers = lastResults.map(r => parseInt(r.number));
-          const average = Math.round(numbers.reduce((a, b) => a + b) / numbers.length);
-          const nextNumber = (average + 3) % 10; // simple logic
-          const color = nextNumber % 2 === 0 ? 'red' : (nextNumber % 3 === 0 ? 'violet' : 'green');
-
-          document.getElementById("prediction").innerHTML = `Next Prediction: <span style="color:${color};">${nextNumber}</span> (${color})`;
-        })
-        .catch(error => {
-          document.getElementById("prediction").textContent = "Error fetching data!";
-          console.error(error);
-        });
+        if (data && data.Data && data.Data.length > 0) {
+          const latest = data.Data[0];
+          const number = latest.WinNumber;
+          const color = getColor(number);
+          document.getElementById('result').innerHTML = `
+            <strong>Predicted Number:</strong> ${number} <br/>
+            <strong>Predicted Color:</strong> ${color}
+          `;
+        } else {
+          throw new Error("Invalid data format");
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('result').innerHTML = '<span class="error">Error fetching data!</span>';
+      }
     }
 
-    fetchDataAndPredict();
-    setInterval(fetchDataAndPredict, 30000); // 30s refresh
+    function getColor(num) {
+      if (num === 0 || num === 13 || num === 26) return 'Violet';
+      if (num % 2 === 0) return 'Green';
+      return 'Red';
+    }
+
+    fetchGameData();
+    setInterval(fetchGameData, 30000); // Refresh every 30 seconds
   </script>
 </body>
 </html>
