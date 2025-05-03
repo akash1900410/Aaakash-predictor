@@ -3,38 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WinGo 30S Fetch Test</title>
+  <title>Akash Predictor</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f3f4f6;
+      padding: 20px;
+      text-align: center;
+    }
+    #prediction {
+      font-size: 24px;
+      margin-top: 20px;
+    }
+    #history {
+      font-size: 14px;
+      color: #555;
+      margin-top: 30px;
+    }
+  </style>
 </head>
 <body>
-  <h1>WinGo 30S Data Fetcher</h1>
-  <pre id="output">Loading...</pre>
+  <h1>Akash Predictor</h1>
+  <div id="prediction">Loading prediction...</div>
+  <div id="history">Fetching game data...</div>
 
   <script>
-    function fetchWinGoData() {
-      const timestamp = Date.now();
-      const url = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?ts=" + timestamp;
+    const apiUrl = 'https://proxy-akash.onrender.com/api';
 
-      fetch(url)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("HTTP status " + response.status);
-          }
-          return response.json();
-        })
+    function fetchDataAndPredict() {
+      fetch(apiUrl)
+        .then(response => response.json())
         .then(data => {
-          console.log("Data:", data);
-          document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+          const results = data.data.list;
+
+          // Show last 5 results in history
+          const lastResults = results.slice(0, 5);
+          document.getElementById("history").innerHTML = "<b>Last Results:</b><br>" + lastResults.map(r => {
+            return `#${r.issueNumber} - ${r.number} (${r.color})`;
+          }).join("<br>");
+
+          // Prediction logic: just a simple average + 1 example (you can improve it)
+          const numbers = lastResults.map(r => parseInt(r.number));
+          const nextNumber = (Math.round(numbers.reduce((a, b) => a + b) / numbers.length) + 1) % 10;
+          const color = nextNumber % 2 === 0 ? 'red' : (nextNumber % 3 === 0 ? 'violet' : 'green');
+
+          document.getElementById("prediction").innerHTML = `Next Prediction: <b>${nextNumber}</b> (${color})`;
         })
         .catch(error => {
-          console.error("Error:", error);
-          document.getElementById("output").textContent = "Error fetching data: " + error.message;
+          document.getElementById("prediction").textContent = "Error fetching data!";
+          console.error(error);
         });
     }
 
-    fetchWinGoData(); // First load
-
-    // Optional: Auto-refresh every 30 seconds
-    setInterval(fetchWinGoData, 30000);
+    fetchDataAndPredict();
+    setInterval(fetchDataAndPredict, 30000); // refresh every 30 seconds
   </script>
 </body>
 </html>
