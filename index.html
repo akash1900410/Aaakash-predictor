@@ -3,11 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WinGo 30S Fetch Test</title>
+  <title>WinGo 30S Predictor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    #prediction {
+      font-size: 20px;
+      font-weight: bold;
+      color: green;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>WinGo 30S Data Fetcher</h1>
-  <pre id="output">Loading...</pre>
+  <h1>WinGo 30S Predictor</h1>
+  <div id="prediction">Loading prediction...</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Round</th>
+        <th>Number</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <!-- Data will appear here -->
+    </tbody>
+  </table>
 
   <script>
     function fetchWinGoData() {
@@ -15,26 +55,41 @@
       const url = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json?ts=" + timestamp;
 
       fetch(url)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("HTTP status " + response.status);
-          }
-          return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-          console.log("Data:", data);
-          document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+          const tableBody = document.getElementById("table-body");
+          const issues = data.data?.issuePage?.slice(0, 50) || [];
+
+          let freq = {};
+          tableBody.innerHTML = "";
+
+          issues.forEach(item => {
+            const num = parseInt(item.number);
+            freq[num] = (freq[num] || 0) + 1;
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${item.issue}</td>
+              <td>${item.number}</td>
+              <td>${item.endtime}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+
+          // Prediction logic: top 3 most frequent numbers
+          const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+          const prediction = sorted.slice(0, 3).map(([num]) => num).join(", ");
+
+          document.getElementById("prediction").textContent = "Next Prediction: " + prediction;
         })
         .catch(error => {
-          console.error("Error:", error);
-          document.getElementById("output").textContent = "Error fetching data: " + error.message;
+          document.getElementById("prediction").textContent = "Error fetching data.";
+          console.error("Fetch error:", error);
         });
     }
 
-    fetchWinGoData(); // First load
-
-    // Optional: Auto-refresh every 30 seconds
-    setInterval(fetchWinGoData, 30000);
+    fetchWinGoData();
+    setInterval(fetchWinGoData, 30000); // auto-refresh
   </script>
 </body>
 </html>
